@@ -193,6 +193,23 @@ void main() {
     );
   });
 
+  test('Does not parse invalid URLs with consecutive periods', () {
+    expectListEqual(
+      linkify('awdaw....aw', options: LinkifyOptions(looseUrl: true)),
+      [TextElement('awdaw....aw')],
+    );
+
+    expectListEqual(
+      linkify('awdaw...wad...wadw', options: LinkifyOptions(looseUrl: true)),
+      [TextElement('awdaw...wad...wadw')],
+    );
+
+    expectListEqual(
+      linkify('test..example.com', options: LinkifyOptions(looseUrl: true)),
+      [TextElement('test..example.com')],
+    );
+  });
+
   test('Parses ending period', () {
     expectListEqual(
       linkify("https://example.com/test."),

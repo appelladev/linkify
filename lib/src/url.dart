@@ -7,7 +7,7 @@ final _urlRegex = RegExp(
 );
 
 final _looseUrlRegex = RegExp(
-  r'''^(.*?)((https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//="'`]*))''',
+  r'''^(.*?)((https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%_\+~#=]+(\.[-a-zA-Z0-9@:%_\+~#=]+)+\b([-a-zA-Z0-9@:%_\+.~#?&//="'`]*))''',
   caseSensitive: false,
   dotAll: true,
 );
@@ -33,6 +33,13 @@ class UrlLinkifier extends Linkifier {
         if (match == null) {
           list.add(element);
         } else {
+          // Check if the prefix ends with a period (indicating consecutive periods)
+          final prefix = match.group(1) ?? '';
+          if (options.looseUrl && prefix.endsWith('.')) {
+            list.add(element);
+            continue;
+          }
+
           final text = element.text.replaceFirst(match.group(0)!, '');
 
           if (match.group(1)?.isNotEmpty == true) {

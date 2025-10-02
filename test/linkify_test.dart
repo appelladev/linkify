@@ -575,4 +575,90 @@ void main() {
       ],
     );
   });
+
+  test('Excludes wrapping parentheses from URLs', () {
+    expectListEqual(
+      linkify('Some text before (https://github.com/Cretezy/flutter_linkify).'),
+      [
+        TextElement('Some text before ('),
+        UrlElement(
+          'https://github.com/Cretezy/flutter_linkify',
+          'github.com/Cretezy/flutter_linkify',
+        ),
+        TextElement(').'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('Check this out (https://example.com)'),
+      [
+        TextElement('Check this out ('),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement(')'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('Link: [https://example.com]'),
+      [
+        TextElement('Link: ['),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement(']'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('Code: {https://example.com}'),
+      [
+        TextElement('Code: {'),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement('}'),
+      ],
+    );
+  });
+
+  test('Excludes wrapping brackets from loose URLs', () {
+    expectListEqual(
+      linkify(
+        'Some text before (example.com/path).',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [
+        TextElement('Some text before ('),
+        UrlElement('http://example.com/path', 'example.com/path'),
+        TextElement(').'),
+      ],
+    );
+
+    expectListEqual(
+      linkify(
+        'Check [example.com]',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [
+        TextElement('Check ['),
+        UrlElement('http://example.com', 'example.com'),
+        TextElement(']'),
+      ],
+    );
+  });
+
+  test('Does not exclude non-wrapping closing brackets', () {
+    expectListEqual(
+      linkify('https://example.com/path)'),
+      [
+        UrlElement('https://example.com/path', 'example.com/path'),
+        TextElement(')'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('No opening bracket https://example.com]'),
+      [
+        TextElement('No opening bracket '),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement(']'),
+      ],
+    );
+  });
 }

@@ -375,6 +375,50 @@ void main() {
     );
   });
 
+  test('Parses TLDs with more than 4 letters', () {
+    expectListEqual(
+      linkify('https://example.design'),
+      [UrlElement('https://example.design', 'example.design')],
+    );
+
+    expectListEqual(
+      linkify('https://example.travel'),
+      [UrlElement('https://example.travel', 'example.travel')],
+    );
+
+    expectListEqual(
+      linkify('https://example.cloud'),
+      [UrlElement('https://example.cloud', 'example.cloud')],
+    );
+
+    expectListEqual(
+      linkify('example.design', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.design', 'example.design')],
+    );
+
+    expectListEqual(
+      linkify('example.travel', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.travel', 'example.travel')],
+    );
+
+    expectListEqual(
+      linkify('example.cloud', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.cloud', 'example.cloud')],
+    );
+
+    expectListEqual(
+      linkify(
+        'Check out example.design for more info',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [
+        TextElement('Check out '),
+        UrlElement('http://example.design', 'example.design'),
+        TextElement(' for more info'),
+      ],
+    );
+  });
+
   test('Parses ending period and trailing punctuation', () {
     expectListEqual(
       linkify("https://example.com/test."),

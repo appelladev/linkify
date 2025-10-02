@@ -210,8 +210,10 @@ void main() {
     );
 
     expectListEqual(
-      linkify('....and i am a sentence',
-          options: LinkifyOptions(looseUrl: true)),
+      linkify(
+        '....and i am a sentence',
+        options: LinkifyOptions(looseUrl: true),
+      ),
       [TextElement('....and i am a sentence')],
     );
   });
@@ -238,8 +240,10 @@ void main() {
     );
 
     expectListEqual(
-      linkify('Check out api.subdomain.example.com for more info',
-          options: LinkifyOptions(looseUrl: true)),
+      linkify(
+        'Check out api.subdomain.example.com for more info',
+        options: LinkifyOptions(looseUrl: true),
+      ),
       [
         TextElement('Check out '),
         UrlElement(

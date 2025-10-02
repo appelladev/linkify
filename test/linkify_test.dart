@@ -255,12 +255,168 @@ void main() {
     );
   });
 
-  test('Parses ending period', () {
+  test('Parses localhost URLs', () {
+    expectListEqual(
+      linkify('http://localhost'),
+      [UrlElement('http://localhost', 'localhost')],
+    );
+
+    expectListEqual(
+      linkify('http://localhost:3000'),
+      [UrlElement('http://localhost:3000', 'localhost:3000')],
+    );
+
+    expectListEqual(
+      linkify('http://localhost:8080/api/test'),
+      [UrlElement('http://localhost:8080/api/test', 'localhost:8080/api/test')],
+    );
+
+    expectListEqual(
+      linkify('localhost', options: LinkifyOptions(looseUrl: true)),
+      [TextElement('localhost')],
+    );
+
+    expectListEqual(
+      linkify(
+        'Check out localhost for testing',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [TextElement('Check out localhost for testing')],
+    );
+
+    expectListEqual(
+      linkify('localhost:3000', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://localhost:3000', 'localhost:3000')],
+    );
+  });
+
+  test('Parses URLs with ports', () {
+    expectListEqual(
+      linkify('https://example.com:8080'),
+      [UrlElement('https://example.com:8080', 'example.com:8080')],
+    );
+
+    expectListEqual(
+      linkify('https://api.example.com:3000/path'),
+      [
+        UrlElement(
+          'https://api.example.com:3000/path',
+          'api.example.com:3000/path',
+        )
+      ],
+    );
+
+    expectListEqual(
+      linkify('example.com:8080', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.com:8080', 'example.com:8080')],
+    );
+  });
+
+  test('Parses IP address URLs', () {
+    expectListEqual(
+      linkify('http://192.168.1.1'),
+      [UrlElement('http://192.168.1.1', '192.168.1.1')],
+    );
+
+    expectListEqual(
+      linkify('http://192.168.1.1:8080'),
+      [UrlElement('http://192.168.1.1:8080', '192.168.1.1:8080')],
+    );
+
+    expectListEqual(
+      linkify('https://10.0.0.1:3000/api'),
+      [UrlElement('https://10.0.0.1:3000/api', '10.0.0.1:3000/api')],
+    );
+
+    expectListEqual(
+      linkify('192.168.1.1:8080', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://192.168.1.1:8080', '192.168.1.1:8080')],
+    );
+
+    expectListEqual(
+      linkify(
+        'Check out 192.168.1.1:8080 for the dashboard',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [
+        TextElement('Check out '),
+        UrlElement('http://192.168.1.1:8080', '192.168.1.1:8080'),
+        TextElement(' for the dashboard'),
+      ],
+    );
+  });
+
+  test('Parses punycode domains', () {
+    // xn--n3h.com is ☃.com (snowman emoji domain)
+    expectListEqual(
+      linkify('https://xn--n3h.com'),
+      [UrlElement('https://xn--n3h.com', 'xn--n3h.com')],
+    );
+
+    // xn--bcher-kva.com is bücher.com (books in German)
+    expectListEqual(
+      linkify('https://xn--bcher-kva.com'),
+      [UrlElement('https://xn--bcher-kva.com', 'xn--bcher-kva.com')],
+    );
+
+    expectListEqual(
+      linkify('xn--n3h.com', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://xn--n3h.com', 'xn--n3h.com')],
+    );
+
+    expectListEqual(
+      linkify('Visit xn--bcher-kva.com for more',
+          options: LinkifyOptions(looseUrl: true)),
+      [
+        TextElement('Visit '),
+        UrlElement('http://xn--bcher-kva.com', 'xn--bcher-kva.com'),
+        TextElement(' for more'),
+      ],
+    );
+  });
+
+  test('Parses ending period and trailing punctuation', () {
     expectListEqual(
       linkify("https://example.com/test."),
       [
         UrlElement("https://example.com/test", "example.com/test"),
         TextElement(".")
+      ],
+    );
+
+    expectListEqual(
+      linkify('Check out https://example.com!'),
+      [
+        TextElement('Check out '),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement('!'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('Visit https://example.com, then come back.'),
+      [
+        TextElement('Visit '),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement(', then come back.'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('See https://example.com?'),
+      [
+        TextElement('See '),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement('?'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('Go to example.com.', options: LinkifyOptions(looseUrl: true)),
+      [
+        TextElement('Go to '),
+        UrlElement('http://example.com', 'example.com'),
+        TextElement('.'),
       ],
     );
   });

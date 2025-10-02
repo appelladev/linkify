@@ -206,7 +206,48 @@ void main() {
 
     expectListEqual(
       linkify('test..example.com', options: LinkifyOptions(looseUrl: true)),
-      [TextElement('test..example.com')],
+      [TextElement('test..'), UrlElement('http://example.com', 'example.com')],
+    );
+
+    expectListEqual(
+      linkify('....and i am a sentence',
+          options: LinkifyOptions(looseUrl: true)),
+      [TextElement('....and i am a sentence')],
+    );
+  });
+
+  test('Parses subdomains correctly', () {
+    expectListEqual(
+      linkify('https://subdomain.example.com'),
+      [UrlElement('https://subdomain.example.com', 'subdomain.example.com')],
+    );
+
+    expectListEqual(
+      linkify('https://api.subdomain.example.com'),
+      [
+        UrlElement(
+          'https://api.subdomain.example.com',
+          'api.subdomain.example.com',
+        )
+      ],
+    );
+
+    expectListEqual(
+      linkify('subdomain.example.com', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://subdomain.example.com', 'subdomain.example.com')],
+    );
+
+    expectListEqual(
+      linkify('Check out api.subdomain.example.com for more info',
+          options: LinkifyOptions(looseUrl: true)),
+      [
+        TextElement('Check out '),
+        UrlElement(
+          'http://api.subdomain.example.com',
+          'api.subdomain.example.com',
+        ),
+        TextElement(' for more info'),
+      ],
     );
   });
 

@@ -131,6 +131,76 @@ void main() {
     );
   });
 
+  test('Parses emails with loose URL detection', () {
+    const options = LinkifyOptions(
+      looseUrl: true,
+      defaultToHttps: true,
+    );
+
+    expectListEqual(
+      linkify('person@example.com', options: options),
+      [EmailElement('person@example.com')],
+    );
+
+    expectListEqual(
+      linkify(
+        'person@example.com',
+        options: options,
+        linkifiers: [UrlLinkifier()],
+      ),
+      [TextElement('person@example.com')],
+    );
+
+    expectListEqual(
+      linkify('mailto:person@example.com', options: options),
+      [EmailElement('person@example.com')],
+    );
+
+    expectListEqual(
+      linkify('person+tag@example.travel', options: options),
+      [EmailElement('person+tag@example.travel')],
+    );
+
+    expectListEqual(
+      linkify('person@mail.example.com', options: options),
+      [EmailElement('person@mail.example.com')],
+    );
+
+    expectListEqual(
+      linkify('person@example.com.', options: options),
+      [EmailElement('person@example.com'), TextElement('.')],
+    );
+
+    expectListEqual(
+      linkify(
+        'Email person@example.com and visit example.com.',
+        options: options,
+      ),
+      [
+        TextElement('Email '),
+        EmailElement('person@example.com'),
+        TextElement(' and visit '),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement('.'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('https://user@example.com', options: options),
+      [UrlElement('https://user@example.com', 'user@example.com')],
+    );
+
+    expectListEqual(
+      linkify('https://user:password@example.com', options: options),
+      [
+        UrlElement(
+          'https://user:password@example.com',
+          'user:password@example.com',
+        ),
+      ],
+    );
+  });
+
   test("Doesn't parses email and link with no linkifiers", () {
     expectListEqual(
       linkify("person@example.com at https://google.com", linkifiers: []),

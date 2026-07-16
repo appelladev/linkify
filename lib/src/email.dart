@@ -1,10 +1,5 @@
 import 'package:linkify/linkify.dart';
-
-final _emailRegex = RegExp(
-  r'^(.*?)((mailto:)?[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z][A-Z]+)',
-  caseSensitive: false,
-  dotAll: true,
-);
+import 'package:linkify/src/email_matcher.dart';
 
 class EmailLinkifier extends Linkifier {
   const EmailLinkifier();
@@ -15,22 +10,20 @@ class EmailLinkifier extends Linkifier {
 
     for (var element in elements) {
       if (element is TextElement) {
-        final match = _emailRegex.firstMatch(element.text);
+        final match = emailRegex.firstMatch(element.text);
 
         if (match == null) {
           list.add(element);
         } else {
           final text = element.text.replaceFirst(match.group(0)!, '');
 
-          if (match.group(1)?.isNotEmpty == true) {
-            list.add(TextElement(match.group(1)!));
+          if (match.group(emailPrefixGroup)?.isNotEmpty == true) {
+            list.add(TextElement(match.group(emailPrefixGroup)!));
           }
 
-          if (match.group(2)?.isNotEmpty == true) {
+          if (match.group(emailElementGroup)?.isNotEmpty == true) {
             // Always humanize emails
-            list.add(EmailElement(
-              match.group(2)!.replaceFirst(RegExp(r'mailto:'), ''),
-            ));
+            list.add(EmailElement(match.group(emailAddressGroup)!));
           }
 
           if (text.isNotEmpty) {

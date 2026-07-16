@@ -157,6 +157,11 @@ void main() {
     );
 
     expectListEqual(
+      linkify('MAILTO:Person@Example.com', options: options),
+      [EmailElement('Person@Example.com')],
+    );
+
+    expectListEqual(
       linkify('person+tag@example.travel', options: options),
       [EmailElement('person+tag@example.travel')],
     );
@@ -164,6 +169,20 @@ void main() {
     expectListEqual(
       linkify('person@mail.example.com', options: options),
       [EmailElement('person@mail.example.com')],
+    );
+
+    expectListEqual(
+      linkify('person@example.xn--p1ai', options: options),
+      [EmailElement('person@example.xn--p1ai')],
+    );
+
+    expectListEqual(
+      linkify(
+        'person@example.xn--p1ai',
+        options: options,
+        linkifiers: [UrlLinkifier()],
+      ),
+      [TextElement('person@example.xn--p1ai')],
     );
 
     expectListEqual(
@@ -186,6 +205,41 @@ void main() {
     );
 
     expectListEqual(
+      linkify(
+        'person@example.com and example.com',
+        options: options,
+        linkifiers: [UrlLinkifier()],
+      ),
+      [
+        TextElement('person@example.com and '),
+        UrlElement('https://example.com', 'example.com'),
+      ],
+    );
+
+    expectListEqual(
+      linkify(
+        'foo_bar.com @bar.com',
+        options: options,
+        linkifiers: [UrlLinkifier()],
+      ),
+      [TextElement('foo_bar.com @bar.com')],
+    );
+
+    expectListEqual(
+      linkify('foo@bar..example.com', options: options),
+      [TextElement('foo@bar..example.com')],
+    );
+
+    expectListEqual(
+      linkify(
+        'mailto:foo@bar..example.com',
+        options: options,
+        linkifiers: [UrlLinkifier()],
+      ),
+      [TextElement('mailto:foo@bar..example.com')],
+    );
+
+    expectListEqual(
       linkify('https://user@example.com', options: options),
       [UrlElement('https://user@example.com', 'user@example.com')],
     );
@@ -196,6 +250,16 @@ void main() {
         UrlElement(
           'https://user:password@example.com',
           'user:password@example.com',
+        ),
+      ],
+    );
+
+    expectListEqual(
+      linkify('https://user:pa:ss@example.com/path', options: options),
+      [
+        UrlElement(
+          'https://user:pa:ss@example.com/path',
+          'user:pa:ss@example.com/path',
         ),
       ],
     );
@@ -214,6 +278,50 @@ void main() {
     expectListEqual(
       linkify("example.com/test", options: LinkifyOptions(looseUrl: true)),
       [UrlElement("http://example.com/test", "example.com/test")],
+    );
+
+    expectListEqual(
+      linkify('example.com/', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.com/', 'example.com/')],
+    );
+
+    expectListEqual(
+      linkify(
+        'https://example.com/',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [UrlElement('https://example.com/', 'example.com/')],
+    );
+
+    expectListEqual(
+      linkify('example.com/?x=1', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.com/?x=1', 'example.com/?x=1')],
+    );
+
+    expectListEqual(
+      linkify(
+        'https://example.com/?x=1',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [UrlElement('https://example.com/?x=1', 'example.com/?x=1')],
+    );
+
+    expectListEqual(
+      linkify('example.com?', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.com', 'example.com'), TextElement('?')],
+    );
+
+    expectListEqual(
+      linkify(
+        'https://example.com?',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [UrlElement('https://example.com', 'example.com'), TextElement('?')],
+    );
+
+    expectListEqual(
+      linkify('example.com#', options: LinkifyOptions(looseUrl: true)),
+      [TextElement('example.com#')],
     );
 
     expectListEqual(
@@ -277,6 +385,19 @@ void main() {
     expectListEqual(
       linkify('test..example.com', options: LinkifyOptions(looseUrl: true)),
       [TextElement('test..'), UrlElement('http://example.com', 'example.com')],
+    );
+
+    expectListEqual(
+      linkify(
+        'test..example.com and next.com',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [
+        TextElement('test..'),
+        UrlElement('http://example.com', 'example.com'),
+        TextElement(' and '),
+        UrlElement('http://next.com', 'next.com'),
+      ],
     );
 
     expectListEqual(
@@ -358,6 +479,44 @@ void main() {
       linkify('localhost:3000', options: LinkifyOptions(looseUrl: true)),
       [UrlElement('http://localhost:3000', 'localhost:3000')],
     );
+
+    expectListEqual(
+      linkify('http://localhost', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://localhost', 'localhost')],
+    );
+
+    expectListEqual(
+      linkify('https://localhost/', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('https://localhost/', 'localhost/')],
+    );
+
+    expectListEqual(
+      linkify(
+        'http://user@localhost',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [UrlElement('http://user@localhost', 'user@localhost')],
+    );
+  });
+
+  test('Includes the last period when requested', () {
+    const options = LinkifyOptions(excludeLastPeriod: false);
+
+    expectListEqual(
+      linkify('https://example.com.', options: options),
+      [UrlElement('https://example.com.', 'example.com.')],
+    );
+
+    expectListEqual(
+      linkify(
+        'example.com.',
+        options: LinkifyOptions(
+          looseUrl: true,
+          excludeLastPeriod: false,
+        ),
+      ),
+      [UrlElement('http://example.com.', 'example.com.')],
+    );
   });
 
   test('Parses URLs with ports', () {
@@ -379,6 +538,32 @@ void main() {
     expectListEqual(
       linkify('example.com:8080', options: LinkifyOptions(looseUrl: true)),
       [UrlElement('http://example.com:8080', 'example.com:8080')],
+    );
+
+    expectListEqual(
+      linkify('example.com:8', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://example.com:8', 'example.com:8')],
+    );
+
+    expectListEqual(
+      linkify(
+        'https://example.com:8',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [UrlElement('https://example.com:8', 'example.com:8')],
+    );
+
+    expectListEqual(
+      linkify('localhost:8', options: LinkifyOptions(looseUrl: true)),
+      [UrlElement('http://localhost:8', 'localhost:8')],
+    );
+
+    expectListEqual(
+      linkify(
+        'http://localhost:8',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [UrlElement('http://localhost:8', 'localhost:8')],
     );
   });
 
@@ -687,6 +872,44 @@ void main() {
     );
   });
 
+  test('Does not create URLs without a host after trimming wrappers', () {
+    expectListEqual(
+      linkify('(https://)'),
+      [TextElement('(https://)')],
+    );
+
+    expectListEqual(
+      linkify('(www.)'),
+      [TextElement('(www.)')],
+    );
+
+    expectListEqual(
+      linkify('(https://) and https://example.com'),
+      [
+        TextElement('(https://) and '),
+        UrlElement('https://example.com', 'example.com'),
+      ],
+    );
+
+    const keepLastPeriod = LinkifyOptions(excludeLastPeriod: false);
+
+    expectListEqual(
+      linkify('www.', options: keepLastPeriod),
+      [TextElement('www.')],
+    );
+
+    expectListEqual(
+      linkify(
+        '(https://.) and https://example.com',
+        options: keepLastPeriod,
+      ),
+      [
+        TextElement('(https://.) and '),
+        UrlElement('https://example.com', 'example.com'),
+      ],
+    );
+  });
+
   test('Excludes wrapping brackets from loose URLs', () {
     expectListEqual(
       linkify(
@@ -709,6 +932,71 @@ void main() {
         TextElement('Check ['),
         UrlElement('http://example.com', 'example.com'),
         TextElement(']'),
+      ],
+    );
+  });
+
+  test('Preserves balanced brackets inside URLs', () {
+    expectListEqual(
+      linkify('https://en.wikipedia.org/wiki/Function_(mathematics)'),
+      [
+        UrlElement(
+          'https://en.wikipedia.org/wiki/Function_(mathematics)',
+          'en.wikipedia.org/wiki/Function_(mathematics)',
+        ),
+      ],
+    );
+
+    expectListEqual(
+      linkify(
+        'example.com/a_(b)_c',
+        options: LinkifyOptions(looseUrl: true),
+      ),
+      [
+        UrlElement(
+          'http://example.com/a_(b)_c',
+          'example.com/a_(b)_c',
+        ),
+      ],
+    );
+  });
+
+  test('Excludes wrapping brackets when retaining URL periods', () {
+    const options = LinkifyOptions(excludeLastPeriod: false);
+
+    expectListEqual(
+      linkify('(https://example.com/a_(b)).', options: options),
+      [
+        TextElement('('),
+        UrlElement(
+          'https://example.com/a_(b)',
+          'example.com/a_(b)',
+        ),
+        TextElement(').'),
+      ],
+    );
+
+    expectListEqual(
+      linkify('[https://example.com].', options: options),
+      [
+        TextElement('['),
+        UrlElement('https://example.com', 'example.com'),
+        TextElement('].'),
+      ],
+    );
+
+    expectListEqual(
+      linkify(
+        '{example.com}.',
+        options: LinkifyOptions(
+          looseUrl: true,
+          excludeLastPeriod: false,
+        ),
+      ),
+      [
+        TextElement('{'),
+        UrlElement('http://example.com', 'example.com'),
+        TextElement('}.'),
       ],
     );
   });
